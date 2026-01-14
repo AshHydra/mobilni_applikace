@@ -1,0 +1,11 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ic_launcher_background" />
+    <item>
+        <inset
+            android:drawable="@drawable/ic_launcher_foreground"
+            android:insetLeft="18dp"
+            android:insetTop="18dp"
+            android:insetRight="18dp"
+            android:insetBottom="18dp" />
+    </item>
+</layer-list>
