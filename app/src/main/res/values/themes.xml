@@ -1,12 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Main app theme (no splash attributes here) -->
     <style name="Theme.Mobilniapplikace" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
 
-        <!-- SplashScreen -->
+    <!-- Splash theme used ONLY for MainActivity startup (Android 12+ and via core-splashscreen backport) -->
+    <style name="Theme.Mobilniapplikace.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
         <item name="windowSplashScreenAnimationDuration">300</item>
         <item name="postSplashScreenTheme">@style/Theme.Mobilniapplikace</item>
     </style>
