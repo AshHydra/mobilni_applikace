@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,9 +28,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.ash.mobilniapplikace.ui.components.ErrorView
 import cz.ash.mobilniapplikace.ui.components.LoadingView
 import cz.ash.mobilniapplikace.ui.di.rememberCoinsRepository
+import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
 import cz.ash.mobilniapplikace.ui.viewmodel.DetailViewModel
 import cz.ash.mobilniapplikace.ui.viewmodel.DetailViewModelFactory
 import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +45,16 @@ fun DetailScreen(
     val factory = remember(repository, coinId) { DetailViewModelFactory(coinId, repository) }
     val vm: DetailViewModel = viewModel(factory = factory)
     val state by vm.state.collectAsState()
-    val currency = remember { NumberFormat.getCurrencyInstance(Locale.US) }
+    val vsCurrency = LocalVsCurrency.current
+    val currency = remember(vsCurrency) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            runCatching { this.currency = Currency.getInstance(vsCurrency.uppercase()) }
+        }
+    }
+
+    LaunchedEffect(vsCurrency, coinId) {
+        vm.load(vsCurrency = vsCurrency, force = true)
+    }
 
     Scaffold(
         topBar = {
@@ -73,7 +85,7 @@ fun DetailScreen(
             state.errorMessage != null -> ErrorView(
                 padding = padding,
                 message = state.errorMessage ?: "Chyba",
-                onRetry = { vm.load() }
+                onRetry = { vm.load(vsCurrency = vsCurrency, force = true) }
             )
             state.coin == null -> LoadingView(padding)
             else -> {

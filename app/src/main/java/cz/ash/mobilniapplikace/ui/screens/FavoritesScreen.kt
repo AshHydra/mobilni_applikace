@@ -17,12 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.ash.mobilniapplikace.ui.di.rememberCoinsRepository
 import cz.ash.mobilniapplikace.ui.components.CoinRow
 import cz.ash.mobilniapplikace.ui.components.CoinRowDivider
+import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
 import cz.ash.mobilniapplikace.ui.viewmodel.FavoritesViewModel
 import cz.ash.mobilniapplikace.ui.viewmodel.FavoritesViewModelFactory
 
@@ -35,6 +39,24 @@ fun DashboardScreen(
     val factory = remember(repository) { FavoritesViewModelFactory(repository) }
     val vm: FavoritesViewModel = viewModel(factory = factory)
     val state by vm.state.collectAsState()
+    val vsCurrency = LocalVsCurrency.current
+
+    var networkItems by remember { mutableStateOf<List<cz.ash.mobilniapplikace.domain.Coin>>(emptyList()) }
+    var networkError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(vsCurrency, state.items.map { it.id }.sorted().joinToString(",")) {
+        // Fetch fresh watchlist prices for selected currency in a single request.
+        networkError = null
+        networkItems = emptyList()
+        val ids = state.items.map { it.id }
+        if (ids.isNotEmpty()) {
+            try {
+                networkItems = repository.fetchCoinsByIds(ids = ids, vsCurrency = vsCurrency, force = false)
+            } catch (t: Throwable) {
+                networkError = t.message ?: "Failed to load watchlist prices"
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -49,12 +71,23 @@ fun DashboardScreen(
                 .padding(padding),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            items(state.items, key = { it.id }) { item ->
+            if (networkError != null) {
+                item {
+                    Text(
+                        text = networkError.orEmpty(),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
+            }
+
+            val list = if (networkItems.isNotEmpty()) networkItems else state.items
+            items(list, key = { it.id }) { item ->
                 CoinRow(
                     name = item.name,
                     symbol = item.symbol,
                     imageUrl = item.imageUrl,
-                    priceUsd = item.priceUsd,
+                    price = item.priceUsd,
                     change24hPct = item.change24hPct,
                     isFavorite = true,
                     onToggleFavorite = { vm.removeFromFavorites(item) },

@@ -96,6 +96,12 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
+    // Settings persistence
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Location (for geolocation-based currency)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     // Supabase (Auth + PostgREST)
     implementation(platform("io.github.jan-tennert.supabase:bom:2.5.4"))
     implementation("io.github.jan-tennert.supabase:supabase-kt")

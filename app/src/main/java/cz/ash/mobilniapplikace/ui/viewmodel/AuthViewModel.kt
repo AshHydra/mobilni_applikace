@@ -26,6 +26,19 @@ class AuthViewModel(
     private val _state = MutableStateFlow(AuthUiState(user = authRepository.currentUserOrNull()))
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
 
+    init {
+        // Restore session from local storage (SharedPreferences) so user stays logged in across restarts.
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            try {
+                authRepository.loadFromStorage()
+                _state.update { it.copy(isLoading = false, user = authRepository.currentUserOrNull()) }
+            } catch (t: Throwable) {
+                _state.update { it.copy(isLoading = false, user = null) }
+            }
+        }
+    }
+
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }

@@ -31,21 +31,28 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
+import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
 
 @Composable
 fun CoinRow(
     name: String,
     symbol: String,
     imageUrl: String?,
-    priceUsd: Double?,
+    price: Double?,
     change24hPct: Double?,
     isFavorite: Boolean,
     onToggleFavorite: (() -> Unit)?,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currency = remember { NumberFormat.getCurrencyInstance(Locale.US) }
+    val vsCurrency = LocalVsCurrency.current
+    val currencyFormatter = remember(vsCurrency) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            runCatching { currency = Currency.getInstance(vsCurrency.uppercase()) }
+        }
+    }
 
     Row(
         modifier = modifier
@@ -87,7 +94,10 @@ fun CoinRow(
                 color = changeColor
             )
             Text(
-                text = priceUsd?.let { currency.format(it) } ?: "—",
+                text = price?.let {
+                    runCatching { currencyFormatter.format(it) }
+                        .getOrElse { String.format(Locale.getDefault(), "%.2f %s", it, vsCurrency.uppercase()) }
+                } ?: "—",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

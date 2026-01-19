@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 data class HomeUiItem(
     val id: String,
@@ -46,14 +47,14 @@ class HomeViewModel(
             }
         }
 
-        refresh()
+        refresh(vsCurrency = "usd")
     }
 
-    fun refresh() {
+    fun refresh(vsCurrency: String, force: Boolean = false) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val loaded = repository.fetchTopCoins()
+                val loaded = repository.fetchTopCoins(vsCurrency = vsCurrency, force = force)
                     .map { c ->
                         HomeUiItem(
                             id = c.id,
@@ -68,10 +69,17 @@ class HomeViewModel(
                 coins.value = loaded
                 _state.update { it.copy(isLoading = false) }
             } catch (t: Throwable) {
+                val msg = if (t is HttpException && t.code() == 429) {
+                    val retryAfter = t.response()?.headers()?.get("Retry-After")?.toLongOrNull()
+                    if (retryAfter != null) "Rate limited (HTTP 429). Try again in ${retryAfter}s."
+                    else "Rate limited (HTTP 429). Please wait a bit and try again."
+                } else {
+                    t.message ?: "Chyba při načítání cen"
+                }
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = t.message ?: "Chyba při načítání cen"
+                        errorMessage = msg
                     )
                 }
             }

@@ -6,12 +6,17 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [FavoriteCoinEntity::class],
-    version = 3,
+    entities = [
+        FavoriteCoinEntity::class,
+        MarketCoinEntity::class,
+        CurrencySyncEntity::class
+    ],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun favoritesDao(): FavoritesDao
+    abstract fun marketCacheDao(): MarketCacheDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
@@ -23,7 +28,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app.db"
                 )
-                    // Jednoduché řešení pro vývoj: při změně schématu DB se DB smaže a vytvoří znovu.
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }

@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,6 +33,7 @@ import cz.ash.mobilniapplikace.ui.components.CoinRowDivider
 import cz.ash.mobilniapplikace.ui.viewmodel.HomeUiItem
 import cz.ash.mobilniapplikace.ui.viewmodel.HomeViewModel
 import cz.ash.mobilniapplikace.ui.viewmodel.HomeViewModelFactory
+import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +46,12 @@ fun ExploreScreen(
     val vm: HomeViewModel = viewModel(factory = factory)
     val state by vm.state.collectAsState()
     val chipScroll = rememberScrollState()
+    val vsCurrency = LocalVsCurrency.current
+
+    LaunchedEffect(vsCurrency) {
+        // When user changes currency, refresh list (cache prevents excessive API calls).
+        vm.refresh(vsCurrency = vsCurrency, force = true)
+    }
 
     Scaffold(
         topBar = {
@@ -79,7 +87,7 @@ fun ExploreScreen(
                     ErrorView(
                         padding = PaddingValues(24.dp),
                         message = state.errorMessage ?: "Error",
-                        onRetry = { vm.refresh() }
+                        onRetry = { vm.refresh(vsCurrency = vsCurrency, force = true) }
                     )
                 }
                 else -> {
@@ -88,7 +96,7 @@ fun ExploreScreen(
                             name = item.name,
                             symbol = item.symbol,
                             imageUrl = item.imageUrl,
-                            priceUsd = item.priceUsd,
+                            price = item.priceUsd,
                             change24hPct = item.change24hPct,
                             isFavorite = item.isFavorite,
                             onToggleFavorite = { vm.toggleFavorite(item) },

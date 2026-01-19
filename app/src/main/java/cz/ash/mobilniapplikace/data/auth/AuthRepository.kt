@@ -8,6 +8,11 @@ import io.github.jan.supabase.gotrue.providers.builtin.Email
 class AuthRepository(
     private val supabase: SupabaseClient
 ) {
+    suspend fun loadFromStorage(): Boolean {
+        // loads session via configured SessionManager (SharedPreferencesSessionManager)
+        return supabase.auth.loadFromStorage(true)
+    }
+
     fun currentUserOrNull(): UserAccount? {
         val user = supabase.auth.currentSessionOrNull()?.user ?: return null
         return UserAccount(

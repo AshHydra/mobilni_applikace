@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 data class DetailUiState(
     val isLoading: Boolean = true,
@@ -32,24 +33,29 @@ class DetailViewModel(
                 _state.update { it.copy(isFavorite = fav) }
             }
         }
-        load()
+        load(vsCurrency = "usd")
     }
 
-    fun load() {
+    fun load(vsCurrency: String, force: Boolean = false) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val coin = repository.fetchCoin(coinId)
+                val coin = repository.fetchCoin(id = coinId, vsCurrency = vsCurrency, force = force)
                 if (coin == null) {
                     _state.update { it.copy(isLoading = false, errorMessage = "Mince nenalezena") }
                 } else {
                     _state.update { it.copy(isLoading = false, coin = coin) }
                 }
             } catch (t: Throwable) {
+                val msg = if (t is HttpException && t.code() == 429) {
+                    "Rate limited (HTTP 429). Please wait a bit and try again."
+                } else {
+                    t.message ?: "Chyba při načítání detailu"
+                }
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = t.message ?: "Chyba při načítání detailu"
+                        errorMessage = msg
                     )
                 }
             }
