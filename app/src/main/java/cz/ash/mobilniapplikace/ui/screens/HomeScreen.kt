@@ -1,18 +1,11 @@
 package cz.ash.mobilniapplikace.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,7 +23,6 @@ import cz.ash.mobilniapplikace.ui.components.LoadingView
 import cz.ash.mobilniapplikace.ui.di.rememberCoinsRepository
 import cz.ash.mobilniapplikace.ui.components.CoinRow
 import cz.ash.mobilniapplikace.ui.components.CoinRowDivider
-import cz.ash.mobilniapplikace.ui.viewmodel.HomeUiItem
 import cz.ash.mobilniapplikace.ui.viewmodel.HomeViewModel
 import cz.ash.mobilniapplikace.ui.viewmodel.HomeViewModelFactory
 import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
@@ -38,14 +30,12 @@ import cz.ash.mobilniapplikace.ui.settings.LocalVsCurrency
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
-    onOpenDetail: (String) -> Unit,
-    onOpenFavorites: () -> Unit
+    onOpenDetail: (String) -> Unit
 ) {
     val repository = rememberCoinsRepository()
     val factory = remember(repository) { HomeViewModelFactory(repository) }
     val vm: HomeViewModel = viewModel(factory = factory)
     val state by vm.state.collectAsState()
-    val chipScroll = rememberScrollState()
     val vsCurrency = LocalVsCurrency.current
 
     LaunchedEffect(vsCurrency) {
@@ -66,21 +56,6 @@ fun ExploreScreen(
                 .padding(padding),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .horizontalScroll(chipScroll),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(selected = true, onClick = { /* TODO */ }, label = { Text("Hot") })
-                    FilterChip(selected = false, onClick = { /* TODO */ }, label = { Text("Market cap") })
-                    FilterChip(selected = false, onClick = { /* TODO */ }, label = { Text("Price") })
-                    FilterChip(selected = false, onClick = { /* TODO */ }, label = { Text("24h change") })
-                    FilterChip(selected = false, onClick = onOpenFavorites, label = { Text("Watchlist") })
-                }
-            }
-
             when {
                 state.isLoading -> item { LoadingView(PaddingValues(24.dp)) }
                 state.errorMessage != null -> item {

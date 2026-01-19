@@ -80,7 +80,7 @@ fun MainScaffold(
                     )
                 }
             }
-        ) { padding ->
+        ) { _ ->
             NavHost(
                 navController = navController,
                 startDestination = Routes.Explore,
@@ -90,8 +90,7 @@ fun MainScaffold(
                 }
                 composable(Routes.Explore) {
                     ExploreScreen(
-                        onOpenDetail = { id -> navController.navigate(Routes.detail(id)) },
-                        onOpenFavorites = { navController.navigate(Routes.Dashboard) }
+                        onOpenDetail = { id -> navController.navigate(Routes.detail(id)) }
                     )
                 }
                 composable(Routes.Profile) {
